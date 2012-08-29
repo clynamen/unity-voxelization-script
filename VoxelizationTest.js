@@ -26,22 +26,9 @@ function Start () {
 		thisObjGrid = Voxelization.CreateGridWithGameObjectMesh(gameObject, cubeSide, includeChildren, drawMeshInside);
 		aABCGrids.Push(thisObjGrid);
 	}
-	if(drawMeshShellWithParticles) {
-		gameObject.AddComponent(ParticleSystem);
-		particleSystem.Emit(2000);
-		particleSystem.startSpeed = 0;
-		particleSystem.emissionRate = 0;
-		particleSystem.playOnAwake = false;
-		particleSystem.startLifetime = 999999999;
-		particleSystem.Simulate(1, true);
-		particleSystem.startSize = cubeSide;
-	}
 }
 
 function LateUpdate () {
-	if(drawMeshShellWithParticles) {	
-		DrawMeshShellWithParticles();
-	}
 }
 
 function OnDrawGizmos () {
@@ -105,7 +92,7 @@ function DrawMeshShell() {
 						var cubeCenter = aABCGrid.GetAABCCenterFromGridCenter(x, y, z) + 
 								aABCGrid.GetCenter() + 
 									meshShellPositionFromObject;
-						if(aABCGrid.IsAABCSetted(x, y, z)) {
+						if(aABCGrid.IsAABCSet(x, y, z)) {
 							Gizmos.color = Color(1, 0, 0, 0.5f);
 							Gizmos.DrawCube(cubeCenter, cubeSize);
 						} else if (drawEmptyCube) {
@@ -118,4 +105,3 @@ function DrawMeshShell() {
 		}	
 	}
 }
-

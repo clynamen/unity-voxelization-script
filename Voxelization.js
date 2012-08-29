@@ -44,7 +44,7 @@ private var width : short;
 private var height : short;
 private var depth : short;
 private var origin : Vector3;
-private var cubeSetted : boolean[,,];
+private var cubeSet : boolean[,,];
 private var	cubeNormalSum : short[,,];
 private var debug = false;
 
@@ -98,8 +98,8 @@ public class AABC extends AABCPosition {
 		return grid;
 	}
 	
-	public function IsSetted() : boolean {
-		return grid.IsAABCSetted(x, y, z);
+	public function IsSet() : boolean {
+		return grid.IsAABCSet(x, y, z);
 	}
 	
 	public function GetCorners(x : short, y : short, z : short) : Vector3[] {
@@ -156,14 +156,14 @@ public class AABCGridIterator extends AABCGridIteratorBase {
 	
 }
 
-public class AABCGridSettedAABCIterator extends AABCGridIteratorBase {
+public class AABCGridSetAABCIterator extends AABCGridIteratorBase {
 	private var nextFound : boolean;
 	private var nextPosition : AABCPosition;
 	
-	public function AABCGridSettedAABCIterator(grid : AABCGrid) {
+	public function AABCGridSetAABCIterator(grid : AABCGrid) {
 		super(grid);
 		position = new AABCPosition(0, 0, 0);
-		if (grid.IsAABCSetted(position)) {
+		if (grid.IsAABCSet(position)) {
 			nextPosition = position;
 		}
 		nextFound = true;
@@ -191,7 +191,7 @@ public class AABCGridSettedAABCIterator extends AABCGridIteratorBase {
 		for (; nextPosition.x < grid.width; nextPosition.x++) {
 			for (; nextPosition.y < grid.height; nextPosition.y++) {
 				for (; nextPosition.z < grid.depth; nextPosition.z++) {
-					if (grid.IsAABCSetted(nextPosition.x, nextPosition.y, nextPosition.z)) {
+					if (grid.IsAABCSet(nextPosition.x, nextPosition.y, nextPosition.z)) {
 						nextFound = true;
 						return true;	
 					}
@@ -211,7 +211,7 @@ public function AABCGrid(x : short, y : short, z : short, sideLength : float) {
 	depth = z;
 	side = sideLength;
 	origin = new Vector3();
-	cubeSetted = new boolean[width, height, depth];
+	cubeSet = new boolean[width, height, depth];
 }
 
 public function AABCGrid(x : short, y : short, z : short, sideLength : float, ori : Vector3) {
@@ -221,11 +221,11 @@ public function AABCGrid(x : short, y : short, z : short, sideLength : float, or
 	
 	side = sideLength;
 	origin = ori;
-	cubeSetted = new boolean[width, height, depth];
+	cubeSet = new boolean[width, height, depth];
 }
 
 public function CleanGrid() {
-	cubeSetted = new boolean[width, height, depth];	
+	cubeSet = new boolean[width, height, depth];	
 }
 
 public function SetDebug(debug : boolean) {
@@ -256,12 +256,12 @@ public function SetCenter(pos : Vector3) {
 	origin = pos - Vector3(width / 2 * side, height / 2 * side, depth / 2 * side);
 }
 
-public function GetSettedAABCCount() : int {
+public function GetSetAABCCount() : int {
 	var count = 0;
 	for (var x = 0; x < width; ++x) {
 		for (var y = 0; y < height; ++y) {
 			for (var z = 0; z < depth; ++z) {
-				if (!IsAABCSetted(x, y, z)) {
+				if (!IsAABCSet(x, y, z)) {
 					count++;
 				}
 			}
@@ -337,18 +337,18 @@ protected function GetAABCCenterFromGridCenterUnchecked(x : short, y : short, z 
 					side * (z + 1 / 2 - depth / 2)); 
 }
 
-public function IsAABCSetted(pos : AABCPosition) : boolean {
+public function IsAABCSet(pos : AABCPosition) : boolean {
 	CheckBounds(pos.x, pos.y, pos.z);
-	return IsAABCSettedUnchecked(pos.x, pos.y, pos.z);
+	return IsAABCSetUnchecked(pos.x, pos.y, pos.z);
 }
 
-public function IsAABCSetted(x : short, y : short, z : short) : boolean {
+public function IsAABCSet(x : short, y : short, z : short) : boolean {
 	CheckBounds(x, y, z);
-	return IsAABCSettedUnchecked(x, y, z);
+	return IsAABCSetUnchecked(x, y, z);
 }
 
-protected function IsAABCSettedUnchecked(x : short, y : short, z : short) : boolean {
-	return cubeSetted[x, y, z];  
+protected function IsAABCSetUnchecked(x : short, y : short, z : short) : boolean {
+	return cubeSet[x, y, z];  
 }
 
 public function TriangleIntersectAABC(triangle : Vector3[], pos : AABCPosition) : boolean {
@@ -453,7 +453,7 @@ public function FillGridWithGameObjectMeshShell(gameObj : GameObject, storeNorma
 					for (z = startZ; z <= endZ; ++z) {
 						if (TriangleIntersectAABC(triangle, x, y, z)) {
 							var triangleNormal = GetTriangleNormal(triangle);
-							cubeSetted[x, y, z] = true;
+							cubeSet[x, y, z] = true;
 							if (triangleNormal.z < 0 - ignoreNormalRange) {
 								cubeNormalSum[x, y, z]++;
 							} else if (triangleNormal.z > 0 + ignoreNormalRange){
@@ -467,8 +467,8 @@ public function FillGridWithGameObjectMeshShell(gameObj : GameObject, storeNorma
 			for (x = startX; x < endX; ++x) {
 				for (y = startY; y < endY; ++y) {
 					for (z = startZ; z < endZ; ++z) {
-						if (!IsAABCSetted(x, y, z) && TriangleIntersectAABC(triangle, x, y, z)) {
-							cubeSetted[x, y, z] = true;
+						if (!IsAABCSet(x, y, z) && TriangleIntersectAABC(triangle, x, y, z)) {
+							cubeSet[x, y, z] = true;
 						}
 					}
 				}
@@ -490,7 +490,7 @@ public function FillGridWithGameObjectMesh(gameObj : GameObject) {
 			var fill = false;
 			var cubeToFill = 0;
 			for (var z = 0; z < depth; ++z) {
-				if (cubeSetted[x, y, z]) {
+				if (cubeSet[x, y, z]) {
 					var normalSum = cubeNormalSum[x, y, z];
 					if (normalSum) {
 						if (normalSum > 0) {
@@ -499,7 +499,7 @@ public function FillGridWithGameObjectMesh(gameObj : GameObject) {
 							fill = false;
 							while (cubeToFill > 1) {
 								cubeToFill--;
-								cubeSetted[x, y, z - cubeToFill] = true;
+								cubeSet[x, y, z - cubeToFill] = true;
 							}
 						}
 						cubeToFill = 0;
@@ -516,7 +516,7 @@ public function FillGridWithGameObjectMesh(gameObj : GameObject) {
 }
 
 public function AddParticles(particles : ParticleSystem.Particle[], particlesToAdd : int) : ParticleSystem.Particle[] {
-	var settedAABCCount = GetSettedAABCCount();
+	var settedAABCCount = GetSetAABCCount();
 	var particlesPerAABC : int;
 	var randMax = side/2;
 	var addedParticles = 0;
@@ -533,7 +533,7 @@ public function AddParticles(particles : ParticleSystem.Particle[], particlesToA
 	}
 	
 	while (particlesToAdd > 0) {
-		var iter = AABCGridSettedAABCIterator(this);
+		var iter = AABCGridSetAABCIterator(this);
 		var cubeFilledCount = 0;		
 		while (iter.HasNext()) {
 			cube = iter.Next();
